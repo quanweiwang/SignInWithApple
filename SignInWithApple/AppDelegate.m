@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import <AuthenticationServices/AuthenticationServices.h>
 
 @interface AppDelegate ()
 
@@ -17,6 +18,37 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+            
+    if (@available(iOS 13.0, *)) {
+        
+        // 注意 存储用户标识信息需要使用钥匙串来存储 这里使用NSUserDefaults 做的简单示例
+        NSString *userIdentifier = [[NSUserDefaults standardUserDefaults] valueForKey:@"appleID"];
+        
+        if (userIdentifier) {
+            
+            ASAuthorizationAppleIDProvider *appleIDProvider = [[ASAuthorizationAppleIDProvider alloc] init];
+            
+            [appleIDProvider getCredentialStateForUserID:userIdentifier
+                                              completion:^(ASAuthorizationAppleIDProviderCredentialState credentialState, NSError * _Nullable error) {
+                switch (credentialState) {
+                    case ASAuthorizationAppleIDProviderCredentialAuthorized:
+                        // 授权状态有效
+                        break;
+                    case ASAuthorizationAppleIDProviderCredentialRevoked:
+                        // 苹果账号登录的凭据已被移除，需解除绑定并重新引导用户使用苹果登录
+                        break;
+                    case ASAuthorizationAppleIDProviderCredentialNotFound:
+                        // 未登录授权，直接弹出登录页面，引导用户登录
+                        break;
+                    case ASAuthorizationAppleIDProviderCredentialTransferred:
+                        // 授权AppleID提供者凭据转移
+                        break;
+                }
+            }];
+        }
+        
+    }
+    
     return YES;
 }
 
@@ -36,6 +68,5 @@
     // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
     // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
 }
-
 
 @end
